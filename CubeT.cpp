@@ -4,7 +4,7 @@
 
 CCubeT::CCubeT(void)
 {
-	DrawMode = 5;
+	DrawMode = 1;
 	PNumber = 8 + 12;
 	FNumber = 12;
 	for (int i = 0; i < 12; i++)
@@ -595,6 +595,6 @@ CRGB CCubeT::PhongShader(CP3 CameraPosition, CLighting lighting, double a, doubl
 
 int CCubeT::GetIndex(int x, int y)//获得深度index
 {
-	return (y + 1000) * 600 + x + 1000;	//不是严格的哈希，但是在屏幕范围内适用
+	return (y + 1000) * 600 + x + 2000;	//不是严格的哈希，但是在屏幕范围内适用
 }
 

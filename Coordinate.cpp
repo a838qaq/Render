@@ -422,5 +422,5 @@ void CCoordinate::SetDrawModeDepth()
 
 int CCoordinate::GetIndex(int x, int y)
 {
-	return (y + 1000) * 600 + x + 1000;
+	return (y + 1000) * 600 + x + 2000;
 }
