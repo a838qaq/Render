@@ -36,7 +36,7 @@ void CTransform3::MultiplyMatrixForTranslate()
 	{
 		temp -= FnNumber;
 	}
-
+	
 	CP3* pTemp = new CP3[temp];
 	for (int i = 0; i < temp; i++)
 	{

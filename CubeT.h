@@ -26,6 +26,7 @@ public:
 	void SetModeTriangle();//设置绘制三角形
 	void SetModePhong();//设置Phong渲染
 	void SetModeRGBBB();//设置颜色混合渲染
+	void SetDepth();//设置深度图
 
 	void SetFaceRGB();//设置面的RGB
 	void SetTriangleRGB();//设置三角形的RGB
@@ -35,6 +36,7 @@ public:
 	void Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting);//绘制图像
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer);//光栅化三角形
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, CP3 CameraPosition, CLighting lighting);//带光照的光栅化
+	void Rasterization(CDC* pDC, int iFace, double* Zbuffer, CP3 CameraPosition, CLighting lighting);//深度信息
 	CRGB PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);//PhongShaer 计算着色
 
 

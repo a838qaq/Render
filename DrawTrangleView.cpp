@@ -48,11 +48,11 @@ CDrawTrangleView::CDrawTrangleView() noexcept
 
 		
 	//设置相机参数
-	camera.SetPosition(740, 360, 520);
-	camera.SetDirector(0.85026667476559437, 0.15400994903886300, 0.50331651808787969);
-	camera.SetHead(0.47097929024900770, 0.20431568690973528, -0.85815709997595813);
-	camera.SetN(-1000);
-	camera.SetF(-1000);
+	camera.SetPosition(1420, 450, 410);
+	camera.SetDirector(0.95467009225299149, 0.19934771704798687, 0.22105542894355878);
+	camera.SetHead(0.086944225713829468, 0.057748823413309877, -0.99453797062223881);
+	camera.SetN(-1800);
+	camera.SetF(-1800);
 	//初始为模型模式
 	UI.SetModeModel();
 
@@ -164,19 +164,18 @@ void CDrawTrangleView::DrawObject()
 	pDC->SetViewportOrg(rect.Width() / 2, rect.Height() / 2);//设置坐标系原点
 	rect.OffsetRect(-rect.Width() / 2, -rect.Height() / 2);//校正客户区矩形
 
-	cubeT.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting);
 	UI.Draw(pDC, nHeight, nWidth);
-	coordinate.Draw(pDC);
+	coordinate.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting, nHeight, nWidth);
+	cubeT.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting);
 
 	ReleaseDC(pDC);
 }
 
 void CDrawTrangleView::DrawObject(CDC *pDC, int nHeight, int nWidth)
 {
-	coordinate.Draw(pDC);
 
-	cubeT.Draw(pDC, camera.GetZbuffer(),camera.Position, lighting);
-
+	coordinate.Draw(pDC, camera.GetZbuffer(),camera.Position,lighting, nHeight, nWidth);
+	cubeT.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting);
 	UI.Draw(pDC, nHeight, nWidth);
 }
 
@@ -190,6 +189,7 @@ void CDrawTrangleView::Transformation()
 	trans.SetMatrix(cubeT.GetBufferPoint(), cubeT.PNumber);
 	Trans.SetMatrix(coordinate.GetBufferPoint(), coordinate.PNumber);
 	trans.SetFnNumber(cubeT.FNumber);
+	Trans.SetFnNumber(0);
 
 	//开始Camera变换
 	trans.Translate(-camera.Position.x, -camera.Position.y, -camera.Position.z);
@@ -378,13 +378,39 @@ BOOL CDrawTrangleView::PreTranslateMessage(MSG* pMsg)
 				break;
 
 			case 3:
-				cubeT.SetModeLineFrame();
+				cubeT.SetDepth();
 				break;
 
 			case 4:
 				cubeT.SetModePhong();
 				break;
+
+			case 5:
+				cubeT.SetModeLineFrame();
+				break;
 			}
+			break;
+
+		case 'B':
+			switch (coordinate.GetDrawMode())
+			{
+			case 0:
+				coordinate.SetDrawModeColor();
+				break;
+
+			case 1:
+				coordinate.SetDrawModeDepth();
+				break;
+
+			case 2:
+				coordinate.SetDrawModeLine();
+				break;
+			}
+			break;
+
+		case 'P':
+			std::cout << 1;
+			break;
 		}
 
 		//模型控制
@@ -554,6 +580,18 @@ BOOL CDrawTrangleView::PreTranslateMessage(MSG* pMsg)
 
 			case 'Y':
 				camera.MoreNarrow();
+				break;
+
+			case 'F':
+				coordinate.Axis[0] = !coordinate.Axis[0];
+				break;
+				
+			case 'G':
+				coordinate.Axis[1] = !coordinate.Axis[1];
+				break;
+
+			case 'H':
+				coordinate.Axis[2] = !coordinate.Axis[2];
 				break;
 			}
 		}

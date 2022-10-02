@@ -4,7 +4,7 @@
 
 CCubeT::CCubeT(void)
 {
-	DrawMode = 1;
+	DrawMode = 5;
 	PNumber = 8 + 12;
 	FNumber = 12;
 	for (int i = 0; i < 12; i++)
@@ -164,6 +164,11 @@ void CCubeT::SetModeRGBBB()
 	DrawMode = 4;
 }
 
+void CCubeT::SetDepth()
+{
+	DrawMode = 5;
+}
+
 void CCubeT::SetFaceRGB()
 {
 	F[0].SetRGB(1, 0, 0);		F[1].SetRGB(1, 0, 0);
@@ -283,6 +288,17 @@ void CCubeT::Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting light
 				continue;
 			}
 			Rasterization(pDC,TRUE, SSAA, iFace, Zbuffer);
+		}
+	}
+	else if (DrawMode == 5)
+	{
+		for (int iFace = 0; iFace < FNumber; iFace++)
+		{
+			if (VisionableFace[iFace] == 0)
+			{
+				continue;
+			}
+			Rasterization(pDC, iFace, Zbuffer, CameraPosition, lighting);
 		}
 	}
 }
@@ -465,6 +481,95 @@ void CCubeT::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, 
 	}
 }
 
+void CCubeT::Rasterization(CDC* pDC, int iFace, double* Zbuffer, CP3 CameraPosition, CLighting lighting)
+{
+	BOOL SSAA = FALSE;
+	BOOL ifLinearInterp = FALSE;
+
+	int MAX_x = fmax(bP[F[iFace].Index[0]].x, fmax(bP[F[iFace].Index[1]].x, bP[F[iFace].Index[2]].x));
+	int MAX_y = fmax(bP[F[iFace].Index[0]].y, fmax(bP[F[iFace].Index[1]].y, bP[F[iFace].Index[2]].y));
+	int MIN_x = fmin(bP[F[iFace].Index[0]].x, fmin(bP[F[iFace].Index[1]].x, bP[F[iFace].Index[2]].x));
+	int MIN_y = fmin(bP[F[iFace].Index[0]].y, fmin(bP[F[iFace].Index[1]].y, bP[F[iFace].Index[2]].y));
+
+	CP3 p0 = bP[F[iFace].Index[0]];
+	CP3 p1 = bP[F[iFace].Index[1]];
+	CP3 p2 = bP[F[iFace].Index[2]];
+
+	for (int i = MIN_x; i <= MAX_x; i++)
+	{
+		for (int j = MIN_y; j <= MAX_y; j++)
+		{
+			if (!SSAA)
+			{
+				double a = ((-(i - p1.x) * (p2.y - p1.y) + (j - p1.y) * (p2.x - p1.x)) /
+					(-(p0.x - p1.x) * (p2.y - p1.y) + (p0.y - p1.y) * (p2.x - p1.x)));
+				double b = ((-(i - p2.x) * (p0.y - p2.y) + (j - p2.y) * (p0.x - p2.x)) /
+					(-(p1.x - p2.x) * (p0.y - p2.y) + (p1.y - p2.y) * (p0.x - p2.x)));
+				double c = 1 - a - b;
+				if (a > 0 && b > 0 && c > 0 && a < 1 && b < 1 && c < 1)
+				{
+					if (ifLinearInterp)
+					{
+						CP3 temp = a * p0 + b * p1 + c * p2;
+						if (temp.z < Zbuffer[GetIndex(i, j)])
+						{
+							Zbuffer[GetIndex(i, j)] = temp.z;
+							CRGB coulor = a * p0.c + b * p1.c + c * p2.c;
+							pDC->MoveTo(i, j);
+							pDC->SetPixelV(i, j, RGB(abs(coulor.red * 255), abs(coulor.green * 255), abs(coulor.blue * 255)));
+						}
+					}
+					else
+					{
+						CP3 temp = a * p0 + b * p1 + c * p2;
+						if (temp.z < Zbuffer[GetIndex(i, j)])
+						{
+							Zbuffer[GetIndex(i, j)] = temp.z;
+							pDC->MoveTo(i, j);
+							pDC->SetPixelV(i, j, RGB(abs((temp.z / 10-100)/100 * 255), abs((temp.z / 10-100) / 100 * 255), abs((temp.z / 10-100) / 100 * 255)));
+						}
+					}
+				}
+			}
+			else
+			{
+				CRGB coulor[4];
+				double a, b, c;
+
+				for (int k = 0; k <= 3; k++)
+				{
+					a = ((-(i + MSAA[k].x - p1.x) * (p2.y - p1.y) + (j + MSAA[k].y - p1.y) * (p2.x - p1.x)) /
+						(-(p0.x - p1.x) * (p2.y - p1.y) + (p0.y - p1.y) * (p2.x - p1.x)));
+					b = ((-(i + MSAA[k].x - p2.x) * (p0.y - p2.y) + (j + MSAA[k].y - p2.y) * (p0.x - p2.x)) /
+						(-(p1.x - p2.x) * (p0.y - p2.y) + (p1.y - p2.y) * (p0.x - p2.x)));
+					c = 1 - a - b;
+
+					if (ifLinearInterp)
+					{
+						coulor[k].red = a * bP[F[iFace].Index[0]].c.red;
+						coulor[k].green = b * bP[F[iFace].Index[1]].c.green;
+						coulor[k].blue = c * bP[F[iFace].Index[2]].c.blue;
+					}
+				}
+				if (a > 0 && b > 0 && c > 0 && a < 1 && b < 1 && c < 1)
+				{
+					if (ifLinearInterp)
+					{
+						CRGB COULOR = (coulor[0] + coulor[1] + coulor[2] + coulor[3]) / 4;
+						pDC->MoveTo(i, j);
+						pDC->SetPixelV(i, j, RGB(abs(COULOR.red * 255), abs(COULOR.green * 255), abs(COULOR.blue * 255)));
+					}
+					else
+					{
+						pDC->MoveTo(i, j);
+						pDC->SetPixelV(i, j, RGB(abs(F[iFace].coulor.red * 255), abs(F[iFace].coulor.green * 255), abs(F[iFace].coulor.blue * 255)));
+					}
+				}
+			}
+		}
+	}
+}
+
 CRGB CCubeT::PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
 {
 	CP3 point = P[F[iFace].Index[0]] * a + P[F[iFace].Index[1]] * b + P[F[iFace].Index[2]] * c;//获得点
@@ -490,6 +595,6 @@ CRGB CCubeT::PhongShader(CP3 CameraPosition, CLighting lighting, double a, doubl
 
 int CCubeT::GetIndex(int x, int y)//获得深度index
 {
-	return (y + 1000) * 600 + x + 2000;	//不是严格的哈希，但是在屏幕范围内适用
+	return (y + 1000) * 600 + x + 1000;	//不是严格的哈希，但是在屏幕范围内适用
 }
 
