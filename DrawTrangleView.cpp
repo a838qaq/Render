@@ -228,6 +228,12 @@ void CDrawTrangleView::InitLightingAndMaterial()
 	cubeT.material.SetSpecular(CRGB(1, 1, 1));
 	cubeT.material.SetEmission(CRGB(0, 0, 0));
 	cubeT.material.SetHightLight(7);
+
+	coordinate.material.SetAmbient(CRGB(0.847, 0.1, 0.075));
+	coordinate.material.SetDiffuse(CRGB(0.52, 0.206, 0.226));
+	coordinate.material.SetSpecular(CRGB(1, 1, 1));
+	coordinate.material.SetEmission(CRGB(0, 0, 0));
+	coordinate.material.SetHightLight(5000000);
 }
 
 

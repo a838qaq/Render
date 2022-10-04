@@ -2,6 +2,8 @@
 #include "P3.h"
 #include "FaceT.h"
 #include "Lighting.h"
+#include "Material.h"
+#include "Lighting.h"
 
 class CCoordinate
 {
@@ -12,8 +14,10 @@ public:
 	void Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting, int nHeight, int nWidth);//绘制
 	void LoadBufferPoint();//读入缓存
 	CP3* GetBufferPoint();//获取缓存顶点表
-	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth);//光栅化三角形
+	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 CameraPosition, CLighting lighting);//光栅化三角形
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth,int depth);//深度图
+	CRGB PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);//PhongShaer 计算着色
+
 
 	int GetDrawMode();
 	void SetDrawModeLine();
@@ -32,6 +36,7 @@ public:
 	int DrawMode;
 
 	BOOL Axis[3];
+	CMaterial material;
 
 	CPoint2 MSAA[4];		//2 x SSAA
 };

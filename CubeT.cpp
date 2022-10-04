@@ -4,7 +4,7 @@
 
 CCubeT::CCubeT(void)
 {
-	DrawMode = 1;
+	DrawMode = 3;
 	PNumber = 8 + 12;
 	FNumber = 12;
 	for (int i = 0; i < 12; i++)
@@ -589,7 +589,6 @@ CRGB CCubeT::PhongShader(CP3 CameraPosition, CLighting lighting, double a, doubl
 		auto La = material.AmbientM * lighting.AmbientL;
 		ans = Ld + La + Ls;
 	}
-//	ans.Normalize();
 	return ans;
 }
 

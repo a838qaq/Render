@@ -165,21 +165,21 @@ void CCoordinate::Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting 
 		{
 			for (int iFace = 0; iFace < FNumber/3; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
 			}
 		}
 		if (Axis[0])
 		{
 			for (int iFace = FNumber/3; iFace < FNumber*2/3; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
 			}
 		}
 		if (Axis[1])
 		{
 			for (int iFace = FNumber*2/3; iFace < FNumber; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
 			}
 		}
 	}
@@ -222,7 +222,7 @@ CP3* CCoordinate::GetBufferPoint()
 	return bP;
 }
 
-void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth)
+void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 cameraPosition, CLighting lighting)
 {
 	int MAX_x = fmax(bP[F[iFace].Index[0]].x, fmax(bP[F[iFace].Index[1]].x, bP[F[iFace].Index[2]].x));
 	int MAX_y = fmax(bP[F[iFace].Index[0]].y, fmax(bP[F[iFace].Index[1]].y, bP[F[iFace].Index[2]].y));
@@ -268,7 +268,13 @@ void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iF
 						{
 							Zbuffer[GetIndex(i, j)] = temp.z;
 							pDC->MoveTo(i, j);
-							pDC->SetPixelV(i, j, RGB(abs(F[iFace].coulor.red * 255), abs(F[iFace].coulor.green * 255), abs(F[iFace].coulor.blue * 255)));
+
+							//Shader
+							CRGB coulor = PhongShader(cameraPosition, lighting, a, b, c, iFace);
+							coulor.red = coulor.red > 1 ? 1 : coulor.red;
+							coulor.green = coulor.green > 1 ? 1 : coulor.green;
+							coulor.blue = coulor.blue > 1 ? 1 : coulor.blue;
+							pDC->SetPixelV(i, j, RGB((coulor.red * 255), (coulor.green * 255), (coulor.blue * 255)));
 						}
 					}
 				}
@@ -398,6 +404,28 @@ void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iF
 			}
 		}
 	}
+}
+
+CRGB CCoordinate::PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+{
+	CP3 point = P[F[iFace].Index[0]] * a + P[F[iFace].Index[1]] * b + P[F[iFace].Index[2]] * c;//获得点
+	CP3 norm = F[iFace].Normal;//获得点法向量
+	CRGB ans = material.Emission;
+	for (int i = 0; i < lighting.LightNumber; i++)
+	{
+		CP3 light = (lighting.LightSRC[i].Position - point);	light.normalization();			//光线
+		CP3 view = CameraPosition - point;						view.normalization();			//实现
+		CP3 half = (light + view);								half.normalization();			//半程向量
+		double r2 = lighting.LightSRC[i].c2 * (lighting.LightSRC->Position - point).GetLenth2()
+			+ lighting.LightSRC[i].c1 * (lighting.LightSRC->Position - point).GetLenth()
+			+ lighting.LightSRC[i].c0;															//距离
+
+		auto Ld = material.DiffuseM * (lighting.LightSRC[i].DiffuseL / r2) * max(0, norm.Dot(light));
+		auto Ls = material.SpecularM * (lighting.LightSRC[i].SpecularL / r2) * pow(max(0, norm.Dot(half)), material.n);
+		auto La = material.AmbientM * lighting.AmbientL;
+		ans = Ld + La + Ls;
+	}
+	return ans;
 }
 
 int CCoordinate::GetDrawMode()
