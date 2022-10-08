@@ -24,8 +24,8 @@ public:
 	CP3 Position;//摄像机位置
 	CP3 Director;//摄像机的指向
 	CP3 Head;//摄像机的头顶方向
-	double n;//投影平面
-	double f;//可视的远平面
+	double n;//投影近平面
+	double f;//可视远平面
 	double Zbuffer[5000000];//Zbuffer
 	int ZbufferMax;//Zbuffer最大值
 };

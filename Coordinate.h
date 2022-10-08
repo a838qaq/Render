@@ -4,6 +4,7 @@
 #include "Lighting.h"
 #include "Material.h"
 #include "Lighting.h"
+#include "CubeT.h"
 
 class CCoordinate
 {
@@ -17,7 +18,8 @@ public:
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 CameraPosition, CLighting lighting);//光栅化三角形
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth,int depth);//深度图
 	CRGB PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);//PhongShaer 计算着色
-
+	BOOL ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);
+	BOOL ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);
 
 	int GetDrawMode();
 	void SetDrawModeLine();

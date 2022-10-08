@@ -428,6 +428,16 @@ CRGB CCoordinate::PhongShader(CP3 CameraPosition, CLighting lighting, double a, 
 	return ans;
 }
 
+BOOL CCoordinate::ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+{
+	return (ifLightingUnderCube(cube, CameraPosition, lighting, a, b, c, iFace));
+}
+
+BOOL CCoordinate::ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+{
+	return 0;
+}
+
 int CCoordinate::GetDrawMode()
 {
 	return DrawMode;
