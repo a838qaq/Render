@@ -4,11 +4,17 @@
 
 CCamera::CCamera()
 {
+	Zbuffer = (double*)malloc(sizeof(double) * 5000000);
 	ZbufferMax = 5000000;
 	for (int i = 0; i < ZbufferMax; i++)
 	{
 		Zbuffer[i] = 999999999;
 	}
+}
+
+CCamera::~CCamera()
+{
+	free(Zbuffer);
 }
 
 void CCamera::SetPosition(double x, double y, double z)

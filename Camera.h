@@ -5,6 +5,7 @@ class CCamera
 {
 public:
 	CCamera();
+	virtual ~CCamera();
 	void SetPosition(double x, double y, double z);
 	void SetDirector(double x, double y, double z);
 	void SetHead(double x, double y, double z);
@@ -26,7 +27,7 @@ public:
 	CP3 Head;//摄像机的头顶方向
 	double n;//投影近平面
 	double f;//可视远平面
-	double Zbuffer[5000000];//Zbuffer
+	double *Zbuffer;//Zbuffer
 	int ZbufferMax;//Zbuffer最大值
 };
 

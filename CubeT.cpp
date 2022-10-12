@@ -4,7 +4,7 @@
 
 CCubeT::CCubeT(void)
 {
-	DrawMode = 3;
+	DrawMode = 0;
 	PNumber = 8 + 12;
 	FNumber = 12;
 	for (int i = 0; i < 12; i++)

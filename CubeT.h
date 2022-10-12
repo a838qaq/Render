@@ -57,6 +57,7 @@ public:
 	int DrawMode;			//绘制模式
 
 	BOOL SSAA;				//是否开启SSAA
+	//vector<CPoint2> MSAA[4];
 	CPoint2 MSAA[4];		//2 x SSAA
 
 	CMaterial material;		//材质	

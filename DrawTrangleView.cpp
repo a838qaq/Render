@@ -165,7 +165,7 @@ void CDrawTrangleView::DrawObject()
 	rect.OffsetRect(-rect.Width() / 2, -rect.Height() / 2);//校正客户区矩形
 
 	UI.Draw(pDC, nHeight, nWidth);
-	coordinate.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting, nHeight, nWidth);
+	coordinate.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting, nHeight, nWidth, cubeT);
 	cubeT.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting);
 
 	ReleaseDC(pDC);
@@ -174,7 +174,7 @@ void CDrawTrangleView::DrawObject()
 void CDrawTrangleView::DrawObject(CDC *pDC, int nHeight, int nWidth)
 {
 
-	coordinate.Draw(pDC, camera.GetZbuffer(),camera.Position,lighting, nHeight, nWidth);
+	coordinate.Draw(pDC, camera.GetZbuffer(),camera.Position,lighting, nHeight, nWidth, cubeT);
 	cubeT.Draw(pDC, camera.GetZbuffer(), camera.Position, lighting);
 	UI.Draw(pDC, nHeight, nWidth);
 }

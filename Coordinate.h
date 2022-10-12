@@ -12,14 +12,14 @@ public:
 	CCoordinate();
 	virtual ~CCoordinate();
 	CP3* GetPoint();//获取顶点表
-	void Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting, int nHeight, int nWidth);//绘制
+	void Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting, int nHeight, int nWidth, CCubeT cube);//绘制
 	void LoadBufferPoint();//读入缓存
 	CP3* GetBufferPoint();//获取缓存顶点表
-	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 CameraPosition, CLighting lighting);//光栅化三角形
+	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 CameraPosition, CLighting lighting, CCubeT cube);//光栅化三角形
 	void Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth,int depth);//深度图
-	CRGB PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);//PhongShaer 计算着色
-	BOOL ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);
-	BOOL ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace);
+	CRGB PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, CCubeT cube);//PhongShaer 计算着色
+	BOOL ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, int iLight);
+	BOOL ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, int iLight);
 
 	int GetDrawMode();
 	void SetDrawModeLine();

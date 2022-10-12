@@ -86,7 +86,7 @@ CP3* CCoordinate::GetPoint()
 	return P;
 }
 
-void CCoordinate::Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting, int nHeight, int nWidth)
+void CCoordinate::Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting lighting, int nHeight, int nWidth, CCubeT cube)
 {
 	if (DrawMode == 0)
 	{
@@ -165,21 +165,21 @@ void CCoordinate::Draw(CDC* pDC, double* Zbuffer, CP3 CameraPosition, CLighting 
 		{
 			for (int iFace = 0; iFace < FNumber/3; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting, cube);
 			}
 		}
 		if (Axis[0])
 		{
 			for (int iFace = FNumber/3; iFace < FNumber*2/3; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting, cube);
 			}
 		}
 		if (Axis[1])
 		{
 			for (int iFace = FNumber*2/3; iFace < FNumber; iFace++)
 			{
-				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting);
+				Rasterization(pDC, FALSE, FALSE, iFace, Zbuffer, nHeight, nWidth, CameraPosition, lighting, cube);
 			}
 		}
 	}
@@ -222,7 +222,7 @@ CP3* CCoordinate::GetBufferPoint()
 	return bP;
 }
 
-void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 cameraPosition, CLighting lighting)
+void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iFace, double* Zbuffer, int nHeight, int nWidth, CP3 cameraPosition, CLighting lighting, CCubeT cube)
 {
 	int MAX_x = fmax(bP[F[iFace].Index[0]].x, fmax(bP[F[iFace].Index[1]].x, bP[F[iFace].Index[2]].x));
 	int MAX_y = fmax(bP[F[iFace].Index[0]].y, fmax(bP[F[iFace].Index[1]].y, bP[F[iFace].Index[2]].y));
@@ -270,7 +270,7 @@ void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iF
 							pDC->MoveTo(i, j);
 
 							//Shader
-							CRGB coulor = PhongShader(cameraPosition, lighting, a, b, c, iFace);
+							CRGB coulor = PhongShader(cameraPosition, lighting, a, b, c, iFace, cube);
 							coulor.red = coulor.red > 1 ? 1 : coulor.red;
 							coulor.green = coulor.green > 1 ? 1 : coulor.green;
 							coulor.blue = coulor.blue > 1 ? 1 : coulor.blue;
@@ -406,36 +406,64 @@ void CCoordinate::Rasterization(CDC* pDC, BOOL ifLinearInterp, BOOL SSAA, int iF
 	}
 }
 
-CRGB CCoordinate::PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+CRGB CCoordinate::PhongShader(CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, CCubeT cube)
 {
 	CP3 point = P[F[iFace].Index[0]] * a + P[F[iFace].Index[1]] * b + P[F[iFace].Index[2]] * c;//获得点
 	CP3 norm = F[iFace].Normal;//获得点法向量
 	CRGB ans = material.Emission;
 	for (int i = 0; i < lighting.LightNumber; i++)
 	{
-		CP3 light = (lighting.LightSRC[i].Position - point);	light.normalization();			//光线
-		CP3 view = CameraPosition - point;						view.normalization();			//实现
-		CP3 half = (light + view);								half.normalization();			//半程向量
-		double r2 = lighting.LightSRC[i].c2 * (lighting.LightSRC->Position - point).GetLenth2()
-			+ lighting.LightSRC[i].c1 * (lighting.LightSRC->Position - point).GetLenth()
-			+ lighting.LightSRC[i].c0;															//距离
-
-		auto Ld = material.DiffuseM * (lighting.LightSRC[i].DiffuseL / r2) * max(0, norm.Dot(light));
-		auto Ls = material.SpecularM * (lighting.LightSRC[i].SpecularL / r2) * pow(max(0, norm.Dot(half)), material.n);
-		auto La = material.AmbientM * lighting.AmbientL;
-		ans = Ld + La + Ls;
+		CRGB Ld, Ls, La;
+		if (ifLighting(cube, *this, CameraPosition, lighting, a, b, c, iFace, i))
+		{
+			CP3 light = (lighting.LightSRC[i].Position - point);	light.normalization();			//光线
+			CP3 view = CameraPosition - point;						view.normalization();			//实现
+			CP3 half = (light + view);								half.normalization();			//半程向量
+			double r2 = lighting.LightSRC[i].c2 * (lighting.LightSRC->Position - point).GetLenth2()
+				+ lighting.LightSRC[i].c1 * (lighting.LightSRC->Position - point).GetLenth()
+				+ lighting.LightSRC[i].c0; 			
+			Ld = material.DiffuseM * (lighting.LightSRC[i].DiffuseL / r2) * max(0, norm.Dot(light));
+			Ls = material.SpecularM * (lighting.LightSRC[i].SpecularL / r2) * pow(max(0, norm.Dot(half)), material.n);
+		}
+		else
+		{
+			Ld.SetRGB(0, 0, 0);
+			Ls.SetRGB(0, 0, 0); 
+		}
+		La = material.AmbientM * lighting.AmbientL;
+		ans = ans + Ld + La + Ls;
 	}
 	return ans;
 }
 
-BOOL CCoordinate::ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+BOOL CCoordinate::ifLighting(CCubeT cube, CCoordinate coordinate, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, int iLight)
 {
-	return (ifLightingUnderCube(cube, CameraPosition, lighting, a, b, c, iFace));
+	return (ifLightingUnderCube(cube, CameraPosition, lighting, a, b, c, iFace, iLight));
 }
 
-BOOL CCoordinate::ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace)
+BOOL CCoordinate::ifLightingUnderCube(CCubeT cube, CP3 CameraPosition, CLighting lighting, double a, double b, double c, int iFace, int iLight)
 {
-	return 0;
+	CP3 E1, E2, S, S1, S2, O = P[F[iFace].Index[0]] * a + P[F[iFace].Index[1]] * b + P[F[iFace].Index[2]] * c;
+	CP3 D = lighting.LightSRC[iLight].Position - O;
+	D.normalization();
+	double b1, b2;
+	for (int iFace = 2; iFace <3; iFace++)
+	{
+		E1 = cube.P[F[iFace].Index[1]] - cube.P[F[iFace].Index[0]];
+		E2 = cube.P[F[iFace].Index[2]] - cube.P[F[iFace].Index[0]];
+		S = O - cube.P[F[iFace].Index[0]];
+		S1 = D.Cross(E2);
+		S2 = S.Cross(E1);
+		double temp = (S1.Dot(E1));
+		b1 = S1.Dot(S) / temp;
+		b2 = S2.Dot(D) / temp;
+		
+		if (b1 >= 0 && b2 >= 0 && (1 - b1 - b2) >= 0)
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 int CCoordinate::GetDrawMode()
